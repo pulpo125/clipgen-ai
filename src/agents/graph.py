@@ -11,14 +11,16 @@ from src.agents.tools.read_pdf import ReadPdfTool
 from src.agents.tools.web_search import WebSearchTool
 from src.agents.prompt import SCRIPT_GENERATE_PROMPT
 from src.utils import (
-    get_openai_chat_llm_client,
+    get_async_es_client,
+    get_azure_chat_llm_client,
     save_json,
     extract_json_from_response,
     log_info,
     log_error,
 )
 
-llm_client = get_openai_chat_llm_client()
+es_client = get_async_es_client()
+llm_client = get_azure_chat_llm_client()
 # =========================
 # 노드 정의
 # =========================
@@ -27,7 +29,6 @@ llm_client = get_openai_chat_llm_client()
 async def prep_material(state: InputState) -> OverallState:
     """
     자료를 준비하는 노드입니다.
-    - 강의 자료
     - PDF 자료
     - 웹 검색 자료
     - 텍스트 자료
@@ -57,7 +58,6 @@ async def prep_material(state: InputState) -> OverallState:
                 "type": "tool_call",
             }
         )
-    print(f"Tool calls: {tool_calls}")
 
     # Tool 호출 실행
     if tool_calls:
@@ -155,7 +155,6 @@ def gen_audio(state: OverallState) -> OverallState:
     오디오를 생성하는 노드입니다.
     - TTS를 사용하여 스크립트로부터 오디오 생성
     """
-
     state["paths"] = {"audio": ["/paths/to/audio_1.mp3"]}
     return state
 
