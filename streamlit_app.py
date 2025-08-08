@@ -55,39 +55,6 @@ with col1:
     # 텍스트 직접 입력
     user_text = st.text_area("텍스트 입력", height=100)
 
-    # 강의 ID (다중 선택)
-    lecture_options = ["CARD-1531", "기타"]
-    selected_lectures = st.multiselect(
-        "강의 ID 선택", lecture_options, max_selections=3
-    )
-
-    # 기타 선택시 직접 입력
-    if "기타" in selected_lectures:
-        custom_lectures = st.text_input(
-            "기타 강의 ID 입력 (쉼표로 구분)", placeholder="예: CARD-1234, CARD-5678"
-        )
-        if custom_lectures:
-            # 기타에서 입력한 값들을 파싱
-            custom_lecture_list = [
-                lecture.strip() for lecture in custom_lectures.split(",")
-            ]
-            # 유효성 검사
-            invalid_lectures = [
-                l for l in custom_lecture_list if not re.match(r"^CARD-\d+$", l)
-            ]
-            if invalid_lectures:
-                st.error(
-                    f"잘못된 강의 ID 형식: {', '.join(invalid_lectures)}. 'CARD-숫자' 형식이어야 합니다."
-                )
-            else:
-                # 기타를 제거하고 커스텀 강의들을 추가
-                selected_lectures = [
-                    l for l in selected_lectures if l != "기타"
-                ] + custom_lecture_list
-
-    # 최종 강의 ID 리스트 저장
-    lecture_ids = [l for l in selected_lectures if l != "기타"]
-
     # PDF 업로드 (최대 5개)
     pdf_files = st.file_uploader(
         "PDF 업로드 (최대 5개)", type=["pdf"], accept_multiple_files=True
@@ -102,11 +69,9 @@ with col1:
     use_web_search = st.checkbox("웹 검색 포함")
 
     # 자료 입력 검증
-    has_material = bool(user_text or lecture_ids or pdf_files or use_web_search)
+    has_material = bool(user_text or pdf_files or use_web_search)
     if not has_material:
-        st.error(
-            "자료를 하나 이상 입력해주세요. (텍스트, 강의 ID, PDF, 웹 검색 중 선택)"
-        )
+        st.error("자료를 하나 이상 입력해주세요. (텍스트, PDF, 웹 검색 중 선택)")
 
     st.divider()
 
@@ -153,7 +118,6 @@ with col1:
                 "roles": selected_roles,
                 "custom_setting": custom_setting,
                 "output_type": output_type,
-                "lecture_ids": lecture_ids,
                 "pdf_paths": pdf_paths,
                 "text": user_text,
                 "enable_web_search": use_web_search,
