@@ -21,6 +21,8 @@ SEARCH_KEYWORD_GENERATE_PROMPT = dedent(
 3. 전략을 바탕으로, 검색 키워드를 최소 5개 이상 생성하세요. 
   - 검색 키워드는 주제와 관련된 정보 수집에 적합해야 하며, 구체적이고 명확해야 합니다.
 
+4. <language>와 동일한 언어로 생성하세요.
+
 # Output Format(JSON)
 {{
   "analysis": (분석 결과),
@@ -33,6 +35,9 @@ SEARCH_KEYWORD_GENERATE_PROMPT = dedent(
 }}
 
 ---
+
+<language>
+{language}
 
 <자료>
 {data}
@@ -48,14 +53,14 @@ SEARCH_KEYWORD_GENERATE_PROMPT = dedent(
 SCRIPT_GENERATE_PROMPT = dedent(
     """
 # Role
-당신은 세계적인 숏폼 콘텐츠 제작자로, 대본, 자막, 오디오, 이미지 등을 글로 정리한 **스크립트**를 생성하는 임무를 맡고 있습니다.
+당신은 세계적인 숏폼 콘텐츠 제작자로, 대본, 자막, 오디오, 이미지 등을 글로 정리한 콘텐츠 스크립트를 생성하는 임무를 맡고 있습니다.
 
 # Objective
-제공된 자료에서 가장 핵심적이고 흥미로운 내용을 추출하여, 짧고 강렬하며, 정보 전달력 있는 **스크립트**를 제작하는 것이 목표입니다.
+제공된 자료에서 가장 핵심적이고 흥미로운 내용을 추출하여, 짧고 강렬하며, 정보 전달력 있는 콘텐츠를 제작하는 것이 목표입니다.
 
 # Input
 - <materials>: 콘텐츠의 모든 정보 출처입니다. 여기에 포함되지 않은 사실은 절대 추가하지 마세요.
-  - type: '강의 자료', 'PDF 자료', '텍스트', '웹 검색 결과' 등
+  - type: 'PDF 자료', '텍스트', '웹 검색 결과' 등
 
 - <input>: 사용자 입력 정보. 주제, 스타일, 요구사항 등이 포함됩니다.
   - topic: 숏폼에서 다룰 핵심 주제
@@ -89,26 +94,22 @@ SCRIPT_GENERATE_PROMPT = dedent(
 
 - `input.custom_setting`에 따라 추가 아이디어나 연출 방식이 필요하면 적극 반영하세요.
 
-## 3. 스크립트 작성 (scripts)
+## 3. 콘텐츠 스크립트 작성 (contents)
 - `styles`과 `scratchpad`를 기반하여 장면별 콘텐츠 스크립트를 생성하세요.
 
 - 각 scene 구성 요소:
-  - 화자의 대본 (???)
-  - 영상 자막 (subtitle)
-  - 음성 생성 지침 (voice_instructions)
-  - 이미지 생성 지침 (image_instructions)
-  - 인용 출처 번호 (citations)
+  - 화자의 대본 (script): `input.language`와 동일한 언어로 작성
+  - 영상 자막 (subtitle): `input.language`와 동일한 언어로 작성
+  - 음성 생성 지침 (voice_instruction): 어떤 식으로 읽을지, 말할지에 대해 지침을 간략하게 영어로 작성. e.g., "Read..." or "Say in a calm tone"
+  - 이미지 생성 지침 (image_instruction): 이미지의 사용 용도와 함께 배경 상황, 주요 요소, 스타일, 감정, 이미지 구도까지 구체적으로 묘사하여 영어로 작성
 
 - 대본 작성 원칙:
   - 자연스러운 대화체로 작성
   - 선택된 화자의 말투 및 어투를 유지
   - **임의 정보 생성 금지** (할루시네이션 방지)
-  
-- 인용:
-  - `인용번호` 는 여러 개의 인용을 포함할 수 있으며, 동일한 문맥이라 하더라도 서로 다른 번호로 인용해도 됩니다. (예: [번호1, 번호2])
 
 - 분량:
-  - 전체 스크립트는 5~10개의 scene으로 구성
+  - 총 5개의 scene으로 구성
   - 한 scene 당 1~3 문장 내외로 요약
 
 # Output Format
@@ -123,14 +124,13 @@ SCRIPT_GENERATE_PROMPT = dedent(
     ],
     "scratchpad": "아이디어 브레인스토밍(str)",
     "title": "숏폼 콘텐츠 제목(str)",
-    "scripts": [
+    "contents": [
         {{
             "speaker": "화자명(str)",
             "script": "화자의 대본(str)",
             "subtitle": "영상 자막(str)",
-            "voice_instructions": "음성 생성 지침(str)",
-            "image_instructions": "이미지 생성 지침(str)",
-            "citations": "인용 번호 목록(list[int])"
+            "voice_instruction": "음성 생성 지침(str)",
+            "image_instruction": "이미지 생성 지침(str)",
         }}
     ]
 }}

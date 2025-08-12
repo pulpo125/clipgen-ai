@@ -24,6 +24,13 @@ with col1:
     # 결과 타입
     output_type = st.selectbox("결과 타입", ["script", "audio", "video"])
 
+    # 언어 선택
+    language = st.selectbox(
+        "언어",
+        ["Korean", "English"],
+        index=0,  # 기본값으로 한국어 선택
+    )
+
     # 스타일
     st.markdown("**스타일**")
     roles = ["강사", "유튜버", "전문가", "진행자", "기타", "랜덤"]
@@ -117,6 +124,7 @@ with col1:
                 "topic": topic,
                 "roles": selected_roles,
                 "custom_setting": custom_setting,
+                "language": language,
                 "output_type": output_type,
                 "pdf_paths": pdf_paths,
                 "text": user_text,
