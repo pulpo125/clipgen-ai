@@ -6,21 +6,25 @@ from langgraph.prebuilt import ToolNode
 from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate
 
+from google import genai
+from google.genai import types
+import wave
+
 from src.agents.state import InputState, OverallState, OutputState
 from src.agents.tools.read_pdf import ReadPdfTool
 from src.agents.tools.web_search import WebSearchTool
 from src.agents.prompt import SCRIPT_GENERATE_PROMPT
 from src.utils import (
-    get_async_es_client,
-    get_azure_chat_llm_client,
+    get_openai_chat_llm_client,
     save_json,
     extract_json_from_response,
     log_info,
     log_error,
 )
+from src.config import cfg
 
-es_client = get_async_es_client()
-llm_client = get_azure_chat_llm_client()
+llm_client = get_openai_chat_llm_client()
+
 # =========================
 # 노드 정의
 # =========================
@@ -127,6 +131,7 @@ def gen_script(state: OverallState) -> OverallState:
             "topic": state["user_input"]["topic"],
             "roles": state["user_input"]["roles"],
             "custom_setting": state["user_input"]["custom_setting"],
+            "language": state["user_input"]["language"],
         }
         materials = state["materials"]
         res = chain.invoke({"input": script_input, "materials": materials})
@@ -155,7 +160,56 @@ def gen_audio(state: OverallState) -> OverallState:
     오디오를 생성하는 노드입니다.
     - TTS를 사용하여 스크립트로부터 오디오 생성
     """
-    state["paths"] = {"audio": ["/paths/to/audio_1.mp3"]}
+
+    def _wave_file(filename, pcm, channels=1, rate=24000, sample_width=2):
+        with wave.open(filename, "wb") as wf:
+            wf.setnchannels(channels)
+            wf.setsampwidth(sample_width)
+            wf.setframerate(rate)
+            wf.writeframes(pcm)
+
+    # Initialize the Google GenAI client:
+    client = genai.Client(api_key=cfg.gemini.api_key)  # gemini client utility 로 관리
+
+    # TTS 실행
+    contents = state["scripts"]["contents"]
+    audio_filepaths = []
+
+    for i, content in enumerate(contents):
+        try:
+            # Audio Prompt
+            audio_prompt = content["voice_instruction"] + ": \n" + content["script"]
+
+            # filepath
+            audio_filename = filename + f"_{i}.wav"
+            audio_filepath = (
+                filepath + "/audio/" + audio_filename
+            )  # filename, filepath 관리 필요
+
+            # TTS 호출
+            response = client.models.generate_content(
+                model=cfg.gemini.tts_model,
+                contents=audio_prompt,
+                config=types.GenerateContentConfig(
+                    response_modalities=["AUDIO"],
+                    speech_config=types.SpeechConfig(
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                voice_name="Zephyr",
+                            )
+                        )
+                    ),
+                ),
+            )
+            audio_data = response.candidates[0].content.parts[0].inline_data.data
+            _wave_file(audio_filepath, audio_data)
+            audio_filepaths.append(audio_filepath)
+
+        except Exception as e:
+            log_error(f"Error generating audio for content {i}: {str(e)}")
+
+    state["paths"] = {"audio": audio_filepaths}
+
     return state
 
 

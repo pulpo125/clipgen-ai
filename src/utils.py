@@ -11,8 +11,8 @@ import yaml
 from glob import glob
 from easydict import EasyDict
 from elasticsearch import Elasticsearch, AsyncElasticsearch
-from langchain_openai import AzureChatOpenAI
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 import tiktoken
 import re
 
@@ -212,6 +212,7 @@ def get_azure_chat_llm_client():
         setattr(client_manager, key, llm)
     return getattr(client_manager, key)
 
+
 def get_openai_chat_llm_client():
     key = "ChatOpenAI"
     if not hasattr(client_manager, key):
@@ -222,6 +223,20 @@ def get_openai_chat_llm_client():
             temperature=0,
         )
         setattr(client_manager, key, chat_llm)
+    return getattr(client_manager, key)
+
+
+def get_gemini_chat_llm_client():
+    key = "ChatGoogleGenerativeAI"
+    if not hasattr(client_manager, key):
+        llm = ChatGoogleGenerativeAI(
+            model=cfg.gemini.llm_model,
+            max_tokens=cfg.gemini.max_tokens,
+            google_api_key=cfg.gemini.api_key,
+            max_retries=0,
+            temperature=0,
+        )
+        setattr(client_manager, key, llm)
     return getattr(client_manager, key)
 
 

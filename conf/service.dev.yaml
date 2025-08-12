@@ -7,3 +7,8 @@ tavily:
   api_key: example_key # https://www.tavily.com/ 에서 API 키를 발급받아 입력하세요.
   max_results: 1
   include_raw_content: false
+
+gemini:
+  api_key: example_key
+  llm_model: gemini-2.5-flash-lite
+  llm_max_tokens: 1024
